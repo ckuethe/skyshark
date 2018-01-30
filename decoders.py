@@ -13,8 +13,11 @@ def fix_coord(x, scale=1e-4):
         degrees *= -1.0
     return degrees
 
-def decode_default(m):
-    print "[{}-{}] {}\n{}\n".format(m['label'], expn, str(m['date']), m['message'])
+def decode_default(message):
+    print "[{}-{}] {}\n{}\n".format(message['label'],
+                                    arinc620.get(message[label], 'unknown'),
+                                    message['date'],
+                                    message['text'])
 
 def decode_SA(x):
     mtype = {'V': 'VHF-ACARS',
