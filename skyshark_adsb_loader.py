@@ -117,6 +117,7 @@ def dbConnect(db='mongodb://localhost:27017/', check_index=True):
         dbh['adsb_positions'].create_index('altitude')
         dbh['adsb_ident'].create_index('icao24')
         dbh['adsb_ident'].create_index('callsign')
+        dbh['adsb_ident'].create_index('lastseen')
         dbh['adsb_ident'].create_index([('icao24', 1), ('callsign', 1)], unique=True)
 
     return dbh
