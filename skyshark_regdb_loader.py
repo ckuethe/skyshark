@@ -171,7 +171,11 @@ def main():
             fix_field_names(reader)
             for row in reader:
                 clean_record(row, table)
-                dbh[table].insert(row)
+                try:
+                    dbh[table].insert(row)
+                except pymongo.errors.DuplicateKeyError:
+                    pass
+
 
 
 if __name__ == '__main__':
