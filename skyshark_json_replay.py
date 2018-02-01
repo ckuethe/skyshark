@@ -66,14 +66,10 @@ def main():
 
             next_time = float(parsed['timestamp'])
             sleep_time = (next_time - last_time) / args.rate
+            sleep_time = sleep_time if sleep_time >= 0 else -sleep_time
             last_time = next_time
             logging.info("sleep %fs", sleep_time)
-            try:
-                sleep(sleep_time)
-            except IOError:
-                # sometimes sleep_time is negative depending on what was in
-                # in the logfile. Ignore the exception that time.sleep would raise
-                pass
+            sleep(sleep_time)
 
 if __name__ == '__main__':
     main()
