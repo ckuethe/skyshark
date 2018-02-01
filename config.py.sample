@@ -1,1 +1,8 @@
+#URL of mongodb instance
 mongo_url='mongodb://localhost:27017/skyshark'
+
+#Maximum number of errors tolerated in an ACARS message
+acars_max_errors=1
+
+#Labels which will be dropped
+acars_ignored_labels=['_d', 'Q0']

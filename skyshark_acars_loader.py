@@ -7,6 +7,9 @@ import argparse
 import socket
 import config
 import json
+import arrow
+
+from expn import *
 
 
 def dbConnect(db='mongodb://localhost:27017/', check_index=True):
@@ -39,8 +42,43 @@ def log_config(lvl):
 
 
 def process_acars(msg):
-    '''Dispatcher for message parsers, fixups, etc. For now this is a no-op'''
-    pass
+    '''Dispatcher for message parsers, fixups, etc.'''
+    #try:
+    try:
+        if msg['error'] > config.acars_max_errors: # don't even try process excessively errored messages
+            return False
+    except NameError:
+        pass
+
+    try:
+        if msg['label'] in config.acars_ignored_labels: # OK, so it's not corrupt, but is it one to drop?
+            return False
+    except NameError:
+        pass
+
+    msg['date'] = arrow.get(msg['timestamp']).datetime # and now we can start doing the hard work with "expensive" functions
+    msg['rxfreq'] = msg.pop('freq', 0)
+
+    #except (TypeError, ValueError, KeyError):
+    #    return False
+
+    try:
+        # strip the dot-padded right-justification. It messes up other database joins
+        msg['tail'] = msg['tail'].replace('.','').strip()
+    except KeyError:
+        pass
+
+    try:
+        # strip whitespace here too.
+        msg['flight'] = msg['flight'].strip()
+    except KeyError:
+        pass
+
+    msg['label'] = msg['label'].upper()
+    msg['expn'] = arinc620.get(msg['label'], 'unknown_{}'.format(msg['label']))
+    if len(msg['expn']) == 1:
+        msg['expn'] = msg['expn'][0]
+    return True
 
 
 def main():
@@ -69,7 +107,8 @@ def main():
         try:
             line = s.recv(1024)
             parsed = json.loads(line)
-            process_acars(parsed)
+            if process_acars(parsed) is False:
+                continue
             logging.debug("%s", parsed)
             dbh.acars.insert_one(parsed)
         except pymongo.errors.DuplicateKeyError:
