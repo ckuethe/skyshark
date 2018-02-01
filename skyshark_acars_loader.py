@@ -74,6 +74,8 @@ def main():
             dbh.acars.insert_one(parsed)
         except pymongo.errors.DuplicateKeyError:
             pass
+        except pymongo.errors.WriteError, e: # What.everrrrrrrr...
+            logging.warn("MongoDB exception: %s", e)
         except KeyboardInterrupt:
             logging.debug("Caught ^C - shutting down" )
             exit(0)
