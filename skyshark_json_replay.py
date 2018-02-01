@@ -2,7 +2,7 @@
 # vim: tabstop=4:softtabstop=4:shiftwidth=4:expandtab:
 
 import json
-import time
+from time import sleep
 import logging
 import bz2
 import gzip
@@ -55,7 +55,12 @@ def main():
         sleep_time = (next_time - last_time) / args.rate
         last_time = next_time
         logging.info("sleep %fs", sleep_time)
-        time.sleep(sleep_time)
+        try:
+            sleep(sleep_time)
+        except IOError:
+            # sometimes sleep_time is negative depending on what was in
+            # in the logfile. Ignore the exception that time.sleep would raise
+            pass
 
 if __name__ == '__main__':
     main()
