@@ -106,6 +106,8 @@ def main():
     while True:
         try:
             line = s.recv(1024)
+            if not line:
+                continue
             parsed = json.loads(line)
             if process_acars(parsed) is False:
                 continue
@@ -119,8 +121,8 @@ def main():
         except KeyboardInterrupt:
             logging.debug("Caught ^C - shutting down" )
             exit(0)
-        except ValueError:  # Invalid JSON
-            logging.info("PARSE ERROR: %s", line)
+        except ValueError, e:  # Invalid JSON
+            logging.debug("PARSE ERROR: '%s'", e)
 
 
 if __name__ == '__main__':
