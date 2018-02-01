@@ -50,7 +50,10 @@ def main():
         logging.debug("%s", line.strip())
 
         line = fd.readline()
-        parsed = json.loads(line)
+        try:
+            parsed = json.loads(line)
+        except ValueError:
+            continue
         next_time = float(parsed['timestamp'])
         sleep_time = (next_time - last_time) / args.rate
         last_time = next_time
