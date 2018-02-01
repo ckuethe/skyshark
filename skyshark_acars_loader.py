@@ -75,7 +75,8 @@ def main():
         except pymongo.errors.DuplicateKeyError:
             pass
         except pymongo.errors.WriteError, e: # What.everrrrrrrr...
-            logging.warn("MongoDB exception: %s", e)
+            logging.info("MongoDB exception: %s", e)
+            logging.info("%s", parsed)
         except KeyboardInterrupt:
             logging.debug("Caught ^C - shutting down" )
             exit(0)
