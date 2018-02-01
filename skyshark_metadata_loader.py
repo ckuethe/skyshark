@@ -101,7 +101,7 @@ def load_airlines(dbh, force=False):
 
     for data in fixes:
         selector = {'iata': data['iata'], 'icao': data['icao']}
-        dbh.airlines.update_one(selector, {'$set': data}, upsert=True)
+        dbh[coll].update_one(selector, {'$set': data}, upsert=True)
 
     return True
 
