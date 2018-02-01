@@ -25,13 +25,15 @@ def main():
     parser.add_argument('-d', '--dest',    dest='dest', type=str,   metavar='IP', default='localhost', help='destination host')
     parser.add_argument('-p', '--port',    dest='port', type=int,   metavar='PORT', default=5555, help='destination port')
     parser.add_argument('-r', '--rate',    dest='rate', type=float, metavar='RATE', default=1, help='scale replay rate')
+    parser.add_argument('-q', '--quick',   dest='quick', action='store_true', default=False, help='scale replay rate')
     parser.add_argument('-v', '--verbose', dest='verbose', action='count', default=0, help='increase verbosity')
     args = parser.parse_args()
 
     log_config(args.verbose)
 
     ip = socket.gethostbyname_ex(args.dest)[-1][0]
-    logging.info("sending to %s:%d (%s)", ip, args.port, args.dest, )
+    dest = (ip, args.port)
+    logging.info("sending to %s:%d (%s)", ip, args.port, args.dest)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     
     if args.file.lower().endswith('.bz2'):
@@ -42,28 +44,36 @@ def main():
         fd = open(args.file, 'rU')
     
     line = fd.readline()
-    parsed = json.loads(line)
-    last_time = float(parsed['timestamp'])
+    if args.quick is False:
+        parsed = json.loads(line)
+        last_time = float(parsed['timestamp'])
 
     while True:
-        s.sendto(line, (ip, args.port))
-        logging.debug("%s", line.strip())
+        if line:
+            s.sendto(line, dest)
+            logging.debug("%s", line.strip())
+        else:
+            logging.info("EOF")
+            exit(0)
 
         line = fd.readline()
-        try:
-            parsed = json.loads(line)
-        except ValueError:
-            continue
-        next_time = float(parsed['timestamp'])
-        sleep_time = (next_time - last_time) / args.rate
-        last_time = next_time
-        logging.info("sleep %fs", sleep_time)
-        try:
-            sleep(sleep_time)
-        except IOError:
-            # sometimes sleep_time is negative depending on what was in
-            # in the logfile. Ignore the exception that time.sleep would raise
-            pass
+
+        if args.quick is False:
+            try:
+                parsed = json.loads(line)
+            except ValueError:
+                continue
+
+            next_time = float(parsed['timestamp'])
+            sleep_time = (next_time - last_time) / args.rate
+            last_time = next_time
+            logging.info("sleep %fs", sleep_time)
+            try:
+                sleep(sleep_time)
+            except IOError:
+                # sometimes sleep_time is negative depending on what was in
+                # in the logfile. Ignore the exception that time.sleep would raise
+                pass
 
 if __name__ == '__main__':
     main()
