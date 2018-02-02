@@ -43,20 +43,22 @@ def log_config(lvl):
 
 def process_acars(msg):
     '''Dispatcher for message parsers, fixups, etc.'''
-    #try:
     try:
-        if msg['error'] > config.acars_max_errors: # don't even try process excessively errored messages
+        # don't even try process excessively errored messages
+        if msg['error'] > config.acars_max_errors:
+            return False
+    except (NameError, KeyError):
+        pass
+
+    try:
+        # It's not corrupt, but is it one to drop?
+        if msg['label'] in config.acars_ignored_labels:
             return False
     except NameError:
         pass
 
-    try:
-        if msg['label'] in config.acars_ignored_labels: # OK, so it's not corrupt, but is it one to drop?
-            return False
-    except NameError:
-        pass
-
-    msg['date'] = arrow.get(msg['timestamp']).datetime # and now we can start doing the hard work with "expensive" functions
+    # now we can start doing the hard work with "expensive" functions
+    msg['date'] = arrow.get(msg['timestamp']).datetime
     msg['rxfreq'] = msg.pop('freq', 0)
 
     #except (TypeError, ValueError, KeyError):
@@ -81,12 +83,30 @@ def process_acars(msg):
     return True
 
 
+def line_handler(dbh, line):
+    try:
+        parsed = json.loads(line)
+        if process_acars(parsed) is False:
+            return None
+        logging.debug("%s", parsed)
+        dbh.acars.insert_one(parsed)
+    except pymongo.errors.DuplicateKeyError:
+        pass
+    except pymongo.errors.WriteError, e: # What.everrrrrrrr...
+        logging.info("MongoDB exception: %s", e)
+        logging.info("%s", parsed)
+    except KeyboardInterrupt:
+        logging.info("Caught ^C - shutting down" )
+        exit(0)
+    except ValueError, e:  # Invalid JSON
+        logging.debug("PARSE ERROR: '%s'", e)
+
 def main():
     descr = 'load ACARS logs into a mongodb instance'
-
     parser = argparse.ArgumentParser(description=descr, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-b', '--bind', dest='bind', type=str, metavar='IP', default='localhost', help='hostname or IP address to listen on')
     parser.add_argument('-p', '--port', dest='port', type=int, metavar='PORT', default=5555, help='port to listen on')
+    parser.add_argument('-f', '--file', dest='file', type=str, metavar='FILE', default=None, help='Read file instead of doing network I/O')
     parser.add_argument('-m', '--mongodb', dest='db', metavar='MONGO', default=None, help='MongoDB server url')
     parser.add_argument('-v', '--verbose', dest='verbose', action='count', default=0, help='increase verbosity')
     args = parser.parse_args()
@@ -99,31 +119,22 @@ def main():
             pass
     dbh = dbConnect(args.db)
 
+    if args.file:
+        logging.info("Using file input")
+        with open(args.file, 'rU') as fd:
+            for line in fd:
+                line_handler(dbh, line)
+        logging.info("EOF - exiting")
+        exit(0)
+
+    # network stuff
     ip = socket.gethostbyname_ex(args.bind)[-1][0]
     logging.info("listening on %s:%d (%s)", ip, args.port, args.bind)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     s.bind((ip, args.port))
     while True:
-        try:
-            line = s.recv(1024)
-            if not line:
-                continue
-            parsed = json.loads(line)
-            if process_acars(parsed) is False:
-                continue
-            logging.debug("%s", parsed)
-            dbh.acars.insert_one(parsed)
-        except pymongo.errors.DuplicateKeyError:
-            pass
-        except pymongo.errors.WriteError, e: # What.everrrrrrrr...
-            logging.info("MongoDB exception: %s", e)
-            logging.info("%s", parsed)
-        except KeyboardInterrupt:
-            logging.debug("Caught ^C - shutting down" )
-            exit(0)
-        except ValueError, e:  # Invalid JSON
-            logging.debug("PARSE ERROR: '%s'", e)
-
+        line = s.recv(1024)
+        line_handler(dbh, line)
 
 if __name__ == '__main__':
     main()
