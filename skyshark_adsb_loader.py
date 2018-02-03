@@ -155,7 +155,7 @@ def do_network_io(icao_cache, dbh, args):
             logging.debug("%s", line)
             handle_line(icao_cache, dbh, line)
     except KeyboardInterrupt:
-        logging.info("saving cache")
+        logging.info("Caught ^C - saving cache and exiting")
         save_icao_cache(args, icao_cache)
 
 def load_icao_cache(args):
@@ -243,7 +243,7 @@ def main():
             do_network_io(icao_cache, dbh, args)
 
     except Exception as e:
-        logging.debug(str(e))
+        logging.warning(str(e))
     
     save_icao_cache(args, icao_cache)
 
