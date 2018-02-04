@@ -149,7 +149,7 @@ def do_network_io(icao_cache, dbh, args):
     c = (args.server, args.port)
     logging.debug("connecting to %s:%d", args.server, args.port)
     fd = socket.create_connection(c).makefile('r')
-    reader = csv.DictReader(fd,fields)
+    reader = csv.DictReader(iter(fd.readline, ''), fields)
     try:
         for line in reader:
             logging.debug("%s", line)
@@ -241,6 +241,7 @@ def main():
             do_file_io(icao_cache, dbh, args)
         else:
             do_network_io(icao_cache, dbh, args)
+            logging.error("Network EOF")
 
     except Exception as e:
         logging.warning(str(e))
