@@ -5,6 +5,7 @@ import re
 import csv
 from dateutil.parser import parse as dateparser
 from dateutil.tz import tzlocal
+from time import sleep
 import pymongo
 import logging
 import bz2
@@ -146,17 +147,22 @@ def do_argparse():
     return args
 
 def do_network_io(icao_cache, dbh, args):
-    c = (args.server, args.port)
-    logging.debug("connecting to %s:%d", args.server, args.port)
-    fd = socket.create_connection(c).makefile('r')
-    reader = csv.DictReader(iter(fd.readline, ''), fields)
-    try:
-        for line in reader:
-            logging.debug("%s", line)
-            handle_line(icao_cache, dbh, line)
-    except KeyboardInterrupt:
-        logging.info("Caught ^C - saving cache and exiting")
+    while True:
+        c = (args.server, args.port)
+        logging.debug("connecting to %s:%d", args.server, args.port)
+        fd = socket.create_connection(c).makefile('r')
+        reader = csv.DictReader(iter(fd.readline, ''), fields)
+        try:
+            for line in reader:
+                logging.debug("%s", line)
+                handle_line(icao_cache, dbh, line)
+        except KeyboardInterrupt:
+            logging.info("Caught ^C - saving cache and exiting")
+            save_icao_cache(args, icao_cache)
+
+        # Ran out of lines to read. Save the cache, wait a sec, and try reconnect.
         save_icao_cache(args, icao_cache)
+        sleep(1)
 
 def load_icao_cache(args):
     if args.cache is None:
