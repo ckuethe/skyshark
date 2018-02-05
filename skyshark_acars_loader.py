@@ -84,7 +84,9 @@ def process_acars(msg):
     if False:
         pass
     elif msg['label'] == ':;':
-        msg.update(decoders.decode_colonsemi(msg))
+        decoders.decode_colonsemi(msg)
+    elif msg['label'] == 'SA':
+        decoders.decode_SA(msg)
     return True
 
 

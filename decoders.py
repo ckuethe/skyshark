@@ -23,6 +23,7 @@ def decode_default(message):
                                     message['text'])
 
 def decode_SA(x):
+    '''Media Advisory'''
     mtype = {'V': 'VHF-ACARS',
              'S': 'Default Satcom',
              'H': 'HF',
@@ -32,13 +33,14 @@ def decode_SA(x):
              'X': 'Inmarsat Aero H/H+/I/L',
              'I': 'Iridium Satcom',
              }
-    m = re.search(r'(?P<version>\d)(?P<est_los>.)(?P<media_type>.)(?P<utctime>\d{6})(?P<cur_media>.)((?P<text>.*))?', x, flags=re.I|re.S|re.M)
-    d ={}
+    m = re.search(r'(?P<version>\d)(?P<est_los>.)(?P<media_type>.)(?P<utctime>\d{6})(?P<cur_media>.)((?P<text>.*))?', x['text'], flags=re.I|re.S|re.M)
     if m:
-        d.update( m.groupdict() )
-        d['media_type'] = mtype[ d['media_type'] ]
-        d['cur_media'] = mtype[ d['cur_media'] ]
-    return d
+        x.update( m.groupdict() )
+        x['media_type'] = mtype[ x['media_type'] ]
+        x['cur_media'] = mtype[ x['cur_media'] ]
+        return True
+    else:
+        return False
 
 def decode_colonsemi(x):
     try:
