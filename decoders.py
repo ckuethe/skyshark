@@ -13,6 +13,9 @@ def fix_coord(x, scale=1e-4):
         degrees *= -1.0
     return degrees
 
+# decoders take a message (dict) as input, and modify it
+# Returns True on success or False otherwise
+
 def decode_default(message):
     print "[{}-{}] {}\n{}\n".format(message['label'],
                                     arinc620.get(message[label], 'unknown'),
@@ -40,10 +43,11 @@ def decode_SA(x):
 def decode_colonsemi(x):
     try:
         new_freq = int(x['text'].strip())/1000.0
+        x['new_freq'] = new_freq
+        return True
     except ValueError:
-        return {}
+        return False
     
-    return {'new_freq': new_freq}
 
 def decode_SQ(x):
     m = re.search(r'(?P<something>.)(?P<ver>\d)(?P<lat>\d{4})(?P<lat_hemi>[NS])(?P<lon>\d{5})(?P<lon_hemi>[EW])(?P<acars_mode>.)(?P<vdl2freq>\d+)(?P<text>.+)?', x)
