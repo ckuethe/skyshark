@@ -10,7 +10,7 @@ import json
 import arrow
 
 from expn import *
-
+import decoders
 
 def dbConnect(db='mongodb://localhost:27017/', check_index=True):
     '''connect to database, and optionally verify the indexes'''
@@ -80,6 +80,11 @@ def process_acars(msg):
     msg['expn'] = arinc620.get(msg['label'], 'unknown_{}'.format(msg['label']))
     if len(msg['expn']) == 1:
         msg['expn'] = msg['expn'][0]
+
+    if False:
+        pass
+    elif msg['label'] == ':;':
+        msg.update(decoders.decode_colonsemi(msg))
     return True
 
 
@@ -89,7 +94,17 @@ def line_handler(dbh, line):
         if process_acars(parsed) is False:
             return None
         logging.debug("%s", parsed)
-        dbh.acars.insert_one(parsed)
+        #dbh.acars.insert_one(parsed)
+        sel = {'timestamp': parsed['timestamp'],
+            'channel': parsed['channel'],
+            'rxfreq': parsed['channel'],
+            'label': parsed['label'],
+            'error': parsed['error'],
+            'level': parsed['level'],
+            'flight': parsed.get('flight', None),
+            'tail': parsed.get('tail', None),
+        }
+        res = dbh.acars.update_one(sel, {'$set': parsed}, upsert=True)
     except pymongo.errors.DuplicateKeyError:
         pass
     except pymongo.errors.WriteError, e: # What.everrrrrrrr...
