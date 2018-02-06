@@ -87,6 +87,8 @@ def process_acars(msg):
         decoders.decode_colonsemi(msg)
     elif msg['label'] == 'SA':
         decoders.decode_SA(msg)
+    elif msg['label'] == 'SQ':
+        decoders.decode_SQ(msg)
     return True
 
 
@@ -96,7 +98,6 @@ def line_handler(dbh, line):
         if process_acars(parsed) is False:
             return None
         logging.debug("%s", parsed)
-        #dbh.acars.insert_one(parsed)
         sel = {'timestamp': parsed['timestamp'],
             'channel': parsed['channel'],
             'rxfreq': parsed['channel'],

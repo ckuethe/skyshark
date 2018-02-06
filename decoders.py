@@ -52,9 +52,9 @@ def decode_colonsemi(x):
     
 
 def decode_SQ(x):
-    m = re.search(r'(?P<something>.)(?P<ver>\d)(?P<lat>\d{4})(?P<lat_hemi>[NS])(?P<lon>\d{5})(?P<lon_hemi>[EW])(?P<acars_mode>.)(?P<vdl2freq>\d+)(?P<text>.+)?', x)
+    m = re.search(r'(?P<something>.)(?P<ver>\d)(?P<lat>\d{4})(?P<lat_hemi>[NS])(?P<lon>\d{5})(?P<lon_hemi>[EW])(?P<acars_mode>.)(?P<vdl2freq>\d+)(?P<text>.+)?', x['text'])
     if m is None:
-        return {}
+        return False
     d = m.groupdict()
     d['lon'] = int(d['lon'])/100.0
     d['lat'] = int(d['lat'])/100.0
@@ -63,7 +63,8 @@ def decode_SQ(x):
     if d.pop('lat_hemi', 'N') == 'S':
         d['lat'] *= -1.0
     d['vdl2freq'] = int(d['vdl2freq'])/1000.0
-    return d
+    x.update(d)
+    return True
 
 def decode_5Z(x):
     d = {'text': x, 'united_type': 'not decoded'}
