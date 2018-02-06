@@ -89,6 +89,8 @@ def process_acars(msg):
         decoders.decode_SA(msg)
     elif msg['label'] == 'SQ':
         decoders.decode_SQ(msg)
+    elif msg['label'] == '5Z':
+        decoders.decode_5Z(msg)
     return True
 
 

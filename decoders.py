@@ -67,16 +67,17 @@ def decode_SQ(x):
     return True
 
 def decode_5Z(x):
-    d = {'text': x, 'united_type': 'not decoded'}
+    d = {'united_type': 'not decoded'}
     
-    mtype = x.split()[0]
+    mtype = x['text'].split()[0]
     d['united_type'] = united_5z.get(mtype, 'not decoded')
     d['mtype'] = mtype
     if mtype == '/B6':
-        m = re.search('K?(?P<dest>[A-Z]{3,4}) R(?P<runway>\d+[RCL]?)', x)
+        m = re.search('K?(?P<dest>[A-Z]{3,4}) R(?P<runway>\d+[RCL]?)', x['text'])
         if m:
             d.update(m.groupdict())
-    return d
+    x.update(d)
+    return True
 
 def decode_15(x):
     rgx = r'[(]2(?P<lat>[NS]\d{5})(?P<lon>[EW]\d{6})(OFF(?P<d>\d{2})(?P<m>\d{2})(?P<y>\d{2})(?P<H>\d{2})(?P<M>\d{2}))?(?P<unknown>.*)[(]Z'
