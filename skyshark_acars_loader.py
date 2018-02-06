@@ -26,7 +26,7 @@ def dbConnect(db='mongodb://localhost:27017/', check_index=True):
         for c in cols:
             dbh['acars'].create_index(c)
         dbh['acars'].create_index([ ('coordinates', pymongo.GEOSPHERE) ])
-        dbh['acars'].create_index([ ('rxfreq',1), ('date',1), ('msgno',1), ('ack',1), ('block_id',1), ('tail',1), ('flight',1), ('label',1) ], name='dedup', unique=True)
+        dbh['acars'].create_index([ ('timestamp',1), ('label',1), ('error',1), ('level',1), ('channel',1), ('rxfreq',1), ('msgno',1), ('ack',1), ('block_id',1), ('tail',1), ('flight',1), ], name='dedup', unique=True)
 
     return dbh
 
