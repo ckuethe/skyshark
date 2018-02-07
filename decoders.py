@@ -80,16 +80,22 @@ def decode_5Z(x):
     return True
 
 def decode_15(x):
+    '''General Aviation Position Report'''
     rgx = r'[(]2(?P<lat>[NS]\d{5})(?P<lon>[EW]\d{6})(OFF(?P<d>\d{2})(?P<m>\d{2})(?P<y>\d{2})(?P<H>\d{2})(?P<M>\d{2}))?(?P<unknown>.*)[(]Z'
-    d = re.search(rgx, x['text']).groupdict()
-    d['lat'] = fix_coord(d['lat'], 1e-3)
-    d['lon'] = fix_coord(d['lon'], 1e-3)
-    try:
-        offtm = "20{}-{}-{} {}:{}:00".format(d.pop('y', None), d.pop('m', None), d.pop('d', None), d.pop('H', None), d.pop('M', None))
-        d['offtm'] = arrow.get(offtm).datetime
-    except arrow.parser.ParserError:
-        pass
-    return d
+    m = re.search(rgx, x['text'])
+    if m:
+        d = m.groupdict()
+        d['lat'] = fix_coord(d['lat'], 1e-3)
+        d['lon'] = fix_coord(d['lon'], 1e-3)
+        try:
+            offtm = "20{}-{}-{} {}:{}:00".format(d.pop('y', None), d.pop('m', None), d.pop('d', None), d.pop('H', None), d.pop('M', None))
+            d['offtm'] = arrow.get(offtm).datetime
+        except arrow.parser.ParserError:
+            pass
+        x.update(d)
+        return True
+    else:
+        return False
 
 def decode_16(x):
     '''Decoder for either "Fedex Position Report-AUTPOS" or "General Aviation Weather Request"'''
