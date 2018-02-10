@@ -39,8 +39,10 @@ def resolve_icao(icao_cache_dict, message):
 
 def process_position(message, dbh):
     rv = { 'icao24': message['icao24']}
-    if len(message['squawk']):
+    try:
         rv['squawk'] = int(message['squawk'])
+    except (KeyError, ValueError):
+        pass
     
     for field in ['alert', 'emergency', 'spi', 'is_on_ground']:
         rv[field] = False if message[field] in ['', '0', 0] else True
@@ -151,7 +153,7 @@ def do_network_io(icao_cache, dbh, args):
         c = (args.server, args.port)
         logging.debug("connecting to %s:%d", args.server, args.port)
         fd = socket.create_connection(c).makefile('r')
-        reader = csv.DictReader(iter(fd.readline, ''), fields)
+        reader = csv.DictReader(fd, fields)
         try:
             for line in reader:
                 logging.debug("%s", line)
@@ -162,6 +164,7 @@ def do_network_io(icao_cache, dbh, args):
 
         # Ran out of lines to read. Save the cache, wait a sec, and try reconnect.
         save_icao_cache(args, icao_cache)
+        logging.info("network EOF - reconnecting")
         sleep(1)
 
 def load_icao_cache(args):
@@ -242,15 +245,11 @@ def main():
 
     icao_cache = load_icao_cache(args)
 
-    try: # wrap the IO stuff
-        if len(args.files):
-            do_file_io(icao_cache, dbh, args)
-        else:
-            do_network_io(icao_cache, dbh, args)
-            logging.error("Network EOF")
+    if len(args.files):
+        do_file_io(icao_cache, dbh, args)
+    else:
+        do_network_io(icao_cache, dbh, args)
 
-    except Exception as e:
-        logging.warning(str(e))
     
     save_icao_cache(args, icao_cache)
 
