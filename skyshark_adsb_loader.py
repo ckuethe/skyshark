@@ -39,10 +39,11 @@ def resolve_icao(icao_cache_dict, message):
 
 def process_position(message, dbh):
     rv = { 'icao24': message['icao24']}
-    try:
-        rv['squawk'] = int(message['squawk'])
-    except (KeyError, ValueError):
-        pass
+    if len(message['squawk']):
+        try:
+            rv['squawk'] = int(message['squawk'])
+        except (TypeError, ValueError):
+            pass
     
     for field in ['alert', 'emergency', 'spi', 'is_on_ground']:
         rv[field] = False if message[field] in ['', '0', 0] else True
