@@ -8,9 +8,11 @@ import socket
 import config
 import json
 import arrow
+from daemonize import Daemonize
 
 from expn import *
 import decoders
+args = None
 
 def dbConnect(db='mongodb://localhost:27017/', check_index=True):
     '''connect to database, and optionally verify the indexes'''
@@ -91,6 +93,8 @@ def process_acars(msg):
         decoders.decode_SQ(msg)
     elif msg['label'] == '5Z':
         decoders.decode_5Z(msg)
+    elif msg['label'] == '15':
+        decoders.decode_15(msg)
     return True
 
 
@@ -122,6 +126,9 @@ def line_handler(dbh, line):
         logging.debug("PARSE ERROR: '%s'", e)
 
 def main():
+    '''Wrapper main(), just enough to decide to daemonize or not'''
+    global args
+
     descr = 'load ACARS logs into a mongodb instance'
     parser = argparse.ArgumentParser(description=descr, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-b', '--bind', dest='bind', type=str, metavar='IP', default='localhost', help='hostname or IP address to listen on')
@@ -129,7 +136,19 @@ def main():
     parser.add_argument('-f', '--file', dest='file', type=str, metavar='FILE', default=None, help='Read file instead of doing network I/O')
     parser.add_argument('-m', '--mongodb', dest='db', metavar='MONGO', default=None, help='MongoDB server url')
     parser.add_argument('-v', '--verbose', dest='verbose', action='count', default=0, help='increase verbosity')
+    parser.add_argument('-d', '--daemon', dest='daemon', action='store_true', default=False, help='detach from controlling terminal')
     args = parser.parse_args()
+
+    if args.daemon:
+        procname='skyshark_acars_loader'
+        pidfile='/tmp/{}.pid'.format(procname)
+        daemon = Daemonize(app=procname, pid=pidfile, action=skyshark_acars_loader)
+        daemon.start()
+    else:
+        skyshark_acars_loader()
+
+def skyshark_acars_loader():
+    global args
 
     log_config(args.verbose)
     if args.db is None:
