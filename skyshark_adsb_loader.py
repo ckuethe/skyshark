@@ -6,6 +6,7 @@ import csv
 from dateutil.parser import parse as dateparser
 from dateutil.tz import tzlocal
 from time import sleep
+from daemonize import Daemonize
 import pymongo
 import logging
 import bz2
@@ -26,6 +27,8 @@ fields=['message_type', 'transmission_type', 'session_id', 'aircraft_id',
 msg_types = {1:'ES_IDENT_AND_CATEGORY', 2: 'ES_SURFACE_POS', 3:'ES_AIRBORNE_POS',
         4:'ES_AIRBORNE_VEL', 5:'SURVEILLANCE_ALT', 6:'SURVEILLANCE_ID',
         7:'AIR_TO_AIR', 8:'ALL_CALL_REPLY'}
+
+args = None
 
 def timefix(date_or_datetime_str, time_str=''):
     '''convert date and time formats into a datetime()'''
@@ -145,6 +148,7 @@ def do_argparse():
     parser.add_argument('-p', '--port', dest='port', metavar='PORT', default=30003, help='SBS1 port')
     parser.add_argument('-m', '--mongodb', dest='db', metavar='MONGO', default=None, help='MongoDB server url')
     parser.add_argument('-v', '--verbose', dest='verbose', action='count', default=0, help='increase verbosity')
+    parser.add_argument('-d', '--daemon', dest='daemon', action='store_true', default=False, help='detach from controlling terminal')
     parser.add_argument(dest='files', metavar='FILE', nargs='*', help='If specified, load data from files rather than live streaming')
     args = parser.parse_args()
     return args
@@ -238,7 +242,23 @@ def do_file_io(icao_cache, dbh, args):
         save_icao_cache(args, icao_cache)
 
 def main():
+    '''Wrapper main(), just enough to decide to daemonize or not'''
+    global args
+
     args = do_argparse()
+
+    if args.daemon:
+        procname='skyshark_adsb_loader'
+        pidfile='/tmp/{}.pid'.format(procname)
+        daemon = Daemonize(app=procname, pid=pidfile, action=skyshark_adsb_loader)
+        daemon.start()
+    else:
+        skyshark_adsb_loader()
+
+
+def skyshark_adsb_loader():
+    global args
+
     log_config(args.verbose)
     if args.db is None:
         args.db = config.mongo_url
