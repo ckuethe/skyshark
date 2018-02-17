@@ -14,7 +14,7 @@ import gzip
 import argparse
 import socket
 import cPickle
-import os
+from os.path import realpath
 import config
 
 # http://woodair.net/SBS/Article/Barebones42_Socket_Data.htm
@@ -215,7 +215,7 @@ def do_file_io(icao_cache, dbh, args):
     n = len(args.files)
     m = 0
     for f in args.files:
-        f = os.path.realpath(f)
+        f = realpath(f)
         m += 1
         try:
             logging.info("Processing file: %s (%d/%d)", f, m, n)
@@ -246,6 +246,8 @@ def main():
     global args
 
     args = do_argparse()
+    if args.cache:
+        args.cache = realpath(args.cache)
 
     if args.daemon:
         procname='skyshark_adsb_loader'
