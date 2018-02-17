@@ -166,6 +166,7 @@ def do_network_io(icao_cache, dbh, args):
         except KeyboardInterrupt:
             logging.info("Caught ^C - saving cache and exiting")
             save_icao_cache(args, icao_cache)
+            return
 
         # Ran out of lines to read. Save the cache, wait a sec, and try reconnect.
         save_icao_cache(args, icao_cache)
