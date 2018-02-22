@@ -206,7 +206,8 @@ def open_datafile(f):
     elif f.lower().endswith('.txt'):
         fd = open(f, 'rU')
     else:
-        raise ValueError("not sure what to do with file")
+        logging.error("not sure what to do with file %s", f)
+        return None
 
     fd.readline() # throw first line away in case it's got junk in it
     reader = csv.DictReader(fd, fields)
@@ -221,6 +222,8 @@ def do_file_io(icao_cache, dbh, args):
         try:
             logging.info("Processing file: %s (%d/%d)", f, m, n)
             reader = open_datafile(f)
+            if reader is None:
+                continue
             nr = 0
             if dbh.loaded.find({'_id': f}).count():
                 logging.debug("file already loaded")
