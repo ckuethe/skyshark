@@ -1,0 +1,23 @@
+[Unit]
+Description=Skyshark ACARS loader
+# Comment out the next line if your mongodb is not on this host
+Requires=mongod.service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+# or create another unprivileged user for skyshark
+User=skyshark
+Group=skyshark
+# Receiving logs from a remote instance of "acarsdec -j ThisHost:5555 ..."
+ExecStart=/home/skyshark/skyshark/skyshark_acars_loader.py -b 0.0.0.0 -p 5555
+Restart=always
+Type=simple
+WorkingDirectory=/home/skyshark/skyshark
+RestartSec=15
+FailureAction=none
+StartLimitAction=none
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

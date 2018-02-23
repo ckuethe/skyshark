@@ -1,4 +1,6 @@
 *
 !*.py
 !*.md
+!systemd
+!systemd/*
 config.py

@@ -1,0 +1,30 @@
+[Unit]
+Description=Skyshark ACARSdec Launcher
+# Comment out the next line if your mongodb is not on this host
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+# or create another unprivileged user for skyshark
+User=skyshark
+Group=skyshark
+# It seems likely that device 0 will be used. Change if you have multiple receivers
+Environment=ACARS_DEV=0
+
+# This list of frequencies is based on those observed in North America.
+Environment="ACARS_FREQS=129.125 129.525 130.025 130.425 130.450 130.575 131.125 131.550"
+
+# Where to send ACARS messages
+Environment=LOGHOST="localhost:5555"
+
+ExecStart=acarsdec -j $LOGHOST -o 0 -r $ACARS_DEV $ACARS_FREQS
+Restart=always
+Type=simple
+WorkingDirectory=/home/skyshark/skyshark
+RestartSec=15
+FailureAction=none
+StartLimitAction=none
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target
