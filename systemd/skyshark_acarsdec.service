@@ -11,13 +11,22 @@ Group=skyshark
 # It seems likely that device 0 will be used. Change if you have multiple receivers
 Environment=ACARS_DEV=0
 
+# receiver PPM correction. A good way to measure this - at least in the USA - is to
+# use GQRX to tune to the NOAA weather radio stations (162.40-162.550MHz) and adjust
+# the ppm control to get the peaks to line up.
+Environment="PPM=-p 0"
+
 # This list of frequencies is based on those observed in North America.
 Environment="ACARS_FREQS=129.125 129.525 130.025 130.425 130.450 130.575 131.125 131.550"
 
 # Where to send ACARS messages
-Environment=LOGHOST="localhost:5555"
+Environment="LOGHOST=-j localhost:5555"
+#Environment="IDENT=-i MyLittleSensor"
+# Local logfile, if desired
+#Environment="LOGFILE=-l /home/skyshark/skyshark/acarsdec.json -o 4"
+Environment="LOGFILE=-o 0"
 
-ExecStart=acarsdec -j $LOGHOST -o 0 -r $ACARS_DEV $ACARS_FREQS
+ExecStart=acarsdec $IDENT $LOGHOST $LOGFILE $PPM -r $ACARS_DEV $ACARS_FREQS
 Restart=always
 Type=simple
 WorkingDirectory=/home/skyshark/skyshark
