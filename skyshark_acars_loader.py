@@ -24,7 +24,8 @@ def dbConnect(db='mongodb://localhost:27017/', check_index=True):
     if check_index is True:
         logging.debug("checking indexes")
         cols = ['rxfreq', 'country', 'callsign', 'block_id', 'date', 'mode', 'level', 'reg',
-                'errors', 'tail', 'flight', 'label', 'ack', 'expn', 'icao', 'msgno', 'iata', ]
+                'errors', 'tail', 'flight', 'label', 'ack', 'expn', 'icao', 'msgno', 'iata',
+                'station_id']
         for c in cols:
             dbh['acars'].create_index(c)
         dbh['acars'].create_index([ ('coordinates', pymongo.GEOSPHERE) ])
