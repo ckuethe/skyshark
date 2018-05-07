@@ -1,0 +1,5 @@
+In /etc/rsyslog.conf
+- enable high precision timestamps
+- add this to the bottom to enable remote logging
+	*.*	action(type="omfwd" target="syslogserver" port="514" protocol="tcp" action.resumeRetryCount="100" queue.type="linkedList" queue.size="10000")
+
