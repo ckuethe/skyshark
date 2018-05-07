@@ -1,0 +1,3 @@
+After writing image
+	echo enable_uart=1 >> /path/to/boot/config.txt
+	touch /path/to/boot/ssh
