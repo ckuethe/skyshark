@@ -1,0 +1,26 @@
+[Unit]
+Description=AutoSSH tunnel to tunnel out of LAN to give me remote backhaul
+After=network.target
+
+[Service]
+User=pi
+Environment="AUTOSSH_GATETIME=0"
+Environment="AUTOSSH_POLL=30"
+
+# The key may be restricted in authorized_keys, so that this innocent
+# watch(1) command is the only thing that this identity can do, so that
+# if someone steals the private key they get nothing.
+
+# Adjust port forwarding to deconflict; it would be great if a unix
+# socket could be established s the endpoint
+ExecStart=/usr/bin/autossh -M 0 -N \
+	-o "ServerAliveInterval 5" \
+	-o "ServerAliveCountMax 6" \
+	-N -R 10022:0.0.0.0:22 \
+	-N -R 10080:0.0.0.0:80 \
+	-N -R 10880:0.0.0.0:8080 \
+	-i /home/pi/.ssh/id_rsa -p 22 \
+	tunnel@collector.example.com "/usr/bin/watch -n 5 /usr/bin/uptime"
+
+[Install]
+WantedBy=multi-user.target

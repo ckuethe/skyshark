@@ -1,0 +1,17 @@
+On the central manager create an account (eg. tunnel) for the backhaul
+user. Set this user to have a locked password, eg `*` in the password
+hash field. eg.
+	"tunnel@collector.example.com"
+
+On each remote device, create an ssh identity for the tunnel.  eg.
+	"pi@remote1.example.com:.ssh/id_rsa_tunnel"
+
+Append the public key to the end of tunnel user's authorized_keys, eg.
+	"tunnel@manager.example.com:.ssh/authorized_keys"
+
+restrict the key's permssions by prepending an allowed command to the
+key data in authorized keys, eg.
+	command="/usr/bin/watch -n 5 /usr/bin/uptime"
+
+Install the provided skyshark_autossh.service, eg.
+	root@remote1.example.com:/etc/systemd/system/skyshark_autossh.service
