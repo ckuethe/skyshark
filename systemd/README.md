@@ -9,3 +9,6 @@ parameters in these service files that need to be customized per installation.
 * `skyshark_acars_loader.service` - listens for acarsdec json logs and stores them into mongodb
 
 * `skyshark_adsb_loader.service` - polls a remote instance of dump1090 and stores SBS1 logs into mongodb
+
+* `skyshark_autossh.service` - supervises ssh management sessions back to a central aggregator host. Consult `system-configs/backhaul.txt` for more information.
+
