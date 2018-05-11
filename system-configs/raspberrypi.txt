@@ -1,3 +1,11 @@
 After writing image
 	echo enable_uart=1 >> /path/to/boot/config.txt
 	touch /path/to/boot/ssh
+
+Edit acarsdec/rtl.c to increase receiver bandwidth
+	comment out "#define RTLMULT 160"
+	add #define RTLMULT 204   // 2.5600 Ms/s
+
+Optimized CFLAGS for dump1090 and acarsdec
+	read https://gist.github.com/fm4dd/c663217935dc17f0fc73c9c81b0aa845
+	"-march=armv7-a -mcpu=cortex-a53 -mtune=cortex-a53 -mfloat-abi=hard -mfpu=neon-fp-armv8 -mneon-for-64bits -Ofast -ffast-math"
