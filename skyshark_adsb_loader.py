@@ -241,6 +241,8 @@ def do_file_io(icao_cache, dbh, args):
                     logging.debug("processed %d lines from %s", nr, f)
         except csv.Error: # probably EOF or truncated file. keep calm and carry on
             pass
+        except EOFError:
+            pass
         dbh.loaded.insert_one({'_id': f})
         logging.debug("completed processing %d lines from %s", nr, f)
         save_icao_cache(args, icao_cache)
